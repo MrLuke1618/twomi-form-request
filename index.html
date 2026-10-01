@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Twomi Operations & Request Queue</title>
-  <meta name="description" content="Simple request management dashboard for forms and emails with live queue, duplicate detection, and Gemini 3.5+ AI auto-triage." />
+  <meta name="description" content="Simple dynamic request management dashboard for forms, emails, and CSV/JSON/MD file uploads with live queue, duplicate detection, and Gemini 3.5+ AI auto-triage." />
   <meta property="og:title" content="Twomi Operations & Request Queue" />
-  <meta property="og:description" content="Simple request management dashboard for forms and emails with live queue, duplicate detection, and Gemini 3.5+ AI auto-triage." />
+  <meta property="og:description" content="Simple dynamic request management dashboard for forms, emails, and CSV/JSON/MD file uploads with live queue, duplicate detection, and Gemini 3.5+ AI auto-triage." />
   
   <!-- Inter & Plus Jakarta Sans typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,111 +130,105 @@
 <body class="text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-teal-400 selection:text-slate-950 pb-12 sm:pb-0"
       x-data="twomiApp()" x-init="initApp()" x-cloak>
 
-  <!-- Sticky Global Header: Optimized for Mobile & Desktop -->
-  <header class="sticky top-0 z-40 twomi-card border-b border-cyan-500/20 px-3 sm:px-6 lg:px-8 py-3 transition-all">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+  <!-- Sticky Global Header: Polished, Modern & Responsive -->
+  <header class="sticky top-0 z-40 bg-[#061924]/95 backdrop-blur-md border-b border-cyan-500/20 px-3 sm:px-6 lg:px-8 py-2.5 transition-all shadow-lg shadow-black/20">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
       
-      <!-- Brand & Title with Twomi signature branding -->
-      <div class="flex items-center justify-between sm:justify-start gap-3">
-        <div class="flex items-center gap-3 cursor-pointer group" @click="activeTab = 'queue'">
-          <!-- Authentic Twomi Logo Graphic -->
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#38c8e8] to-[#6ee7b7] p-0.5 shadow-lg shadow-teal-500/25 flex items-center justify-center transition-transform group-hover:scale-105">
-            <div class="w-full h-full bg-[#071822] rounded-[14px] flex items-center justify-center relative overflow-hidden">
-              <span class="font-extrabold text-base tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-teal-300">twomi</span>
-            </div>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                <span>twomi</span>
-                <span class="text-xs font-semibold text-cyan-300 tracking-normal px-2 py-0.5 rounded-md bg-cyan-950/70 border border-cyan-500/30">
-                  <span class="text-teal-400">●</span> Ops Hub
-                </span>
-              </h1>
-            </div>
-            <p class="text-[11px] text-teal-200/70 font-medium truncate max-w-[220px] sm:max-w-none" x-text="t('subtitle')"></p>
+      <!-- Brand Logo & Identity -->
+      <div class="flex items-center gap-3 cursor-pointer group flex-shrink-0" @click="activeTab = 'queue'">
+        <!-- Authentic Twomi Stylized Emblem -->
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-cyan-400 via-teal-400 to-emerald-400 p-[1.5px] shadow-lg shadow-teal-500/20 transition-transform group-hover:scale-105 flex-shrink-0">
+          <div class="w-full h-full bg-[#071924] rounded-[9px] sm:rounded-[10px] flex items-center justify-center relative overflow-hidden">
+            <svg class="w-5 h-5 text-teal-300 transition-colors group-hover:text-teal-200" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4z" class="fill-teal-500/20 stroke-teal-400" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </div>
         </div>
-
-        <!-- Mobile-Only Language & Key Quick Access -->
-        <div class="flex items-center gap-1.5 sm:hidden">
-          <select x-model="currentLang" @change="savePref()"
-                  aria-label="Language selector"
-                  class="bg-[#0b2433] text-xs font-semibold text-teal-200 border border-cyan-500/30 rounded-lg px-2 py-1.5 focus:outline-none focus:border-teal-400">
-            <option value="en">EN</option>
-            <option value="vi">VI</option>
-            <option value="ja">JA</option>
-          </select>
-          <button @click="showKeyModal = true"
-                  :class="apiKey ? 'border-teal-400 text-teal-300 bg-teal-950/60 shadow-teal-500/20' : 'border-cyan-500/30 text-slate-300 bg-[#0b2433]'"
-                  class="p-1.5 text-xs rounded-lg border focus:outline-none flex items-center gap-1" :title="apiKey ? ('Gemini 3.5+: ' + selectedModelDisplay) : 'Gemini AI Key'">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-            </svg>
-            <span x-show="apiKey" class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-          </button>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="text-lg sm:text-xl font-extrabold tracking-tight text-white group-hover:text-teal-300 transition-colors">twomi</span>
+            <span class="text-[10px] sm:text-[11px] font-semibold text-cyan-300 px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-500/30 inline-flex items-center gap-1.5 shadow-inner">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
+              <span>Ops Hub</span>
+            </span>
+          </div>
+          <p class="text-[10px] sm:text-[11px] text-teal-200/70 font-medium truncate max-w-[170px] sm:max-w-none" x-text="t('subtitle')"></p>
         </div>
       </div>
 
       <!-- Quick Metrics Counter (Desktop & Tablet) -->
-      <div class="hidden lg:flex items-center gap-2.5 text-xs">
-        <div class="px-3 py-1.5 rounded-xl bg-[#09202c]/90 border border-cyan-500/25 flex items-center gap-2 shadow-sm">
-          <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          <span class="text-teal-200/70" x-text="t('total')"></span>
+      <div class="hidden lg:flex items-center gap-2 text-xs">
+        <div class="px-2.5 py-1 rounded-xl bg-[#08202d]/90 border border-cyan-500/25 flex items-center gap-1.5 shadow-sm">
+          <span class="text-teal-200/70 font-medium" x-text="t('total') + ':'"></span>
           <span class="font-bold text-white font-mono" x-text="queue.length"></span>
         </div>
-        <div class="px-3 py-1.5 rounded-xl bg-[#09202c]/90 border border-amber-500/30 flex items-center gap-2 shadow-sm">
-          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-          </svg>
-          <span class="text-amber-200/80" x-text="t('flagged')"></span>
+        <div class="px-2.5 py-1 rounded-xl bg-[#08202d]/90 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+          <span class="text-amber-200/80 font-medium" x-text="t('flagged') + ':'"></span>
           <span class="font-bold text-amber-300 font-mono" x-text="flaggedCount"></span>
         </div>
-        <div class="px-3 py-1.5 rounded-xl bg-[#09202c]/90 border border-emerald-500/30 flex items-center gap-2 shadow-sm">
-          <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span class="text-emerald-200/80" x-text="t('resolved')"></span>
+        <div class="px-2.5 py-1 rounded-xl bg-[#08202d]/90 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+          <span class="text-emerald-200/80 font-medium" x-text="t('resolved') + ':'"></span>
           <span class="font-bold text-emerald-300 font-mono" x-text="resolvedCount"></span>
         </div>
+        <template x-if="uploadedFiles.length > 0">
+          <div class="px-2.5 py-1 rounded-xl bg-teal-950/70 border border-teal-400/40 text-teal-200 flex items-center gap-1.5 shadow-sm">
+            <span>📁</span>
+            <span class="font-mono font-bold" x-text="uploadedFiles.length"></span>
+            <span class="text-[11px] text-teal-300/80" x-text="t('filesLoaded')"></span>
+          </div>
+        </template>
       </div>
 
-      <!-- Desktop Utility Controls -->
-      <div class="hidden sm:flex items-center gap-2">
-        <!-- Language Selector with Country flags -->
-        <div class="relative">
+      <!-- Utility Controls & Actions -->
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Language Selector -->
+        <div class="relative flex items-center">
           <select x-model="currentLang" @change="savePref()"
                   aria-label="Language selector"
-                  class="bg-[#0c2433] text-xs font-semibold text-teal-100 border border-cyan-500/30 rounded-xl px-3 py-2 focus:outline-none focus:border-teal-400 cursor-pointer shadow-inner">
-            <option value="en">English</option>
-            <option value="vi">Tiếng Việt</option>
-            <option value="ja">日本語</option>
+                  class="h-9 bg-[#0b2433] hover:bg-[#0f2e42] text-xs font-semibold text-teal-100 border border-cyan-500/30 hover:border-teal-400/60 rounded-xl pl-2.5 pr-6 sm:pr-7 focus:outline-none focus:border-teal-400 cursor-pointer shadow-sm transition-colors appearance-none">
+            <option value="en">🇺🇸 EN</option>
+            <option value="vi">🇻🇳 VI</option>
+            <option value="ja">🇯🇵 JA</option>
           </select>
+          <div class="pointer-events-none absolute right-2 text-teal-400/60 text-[9px]">▼</div>
         </div>
 
-        <!-- BYOK AI Button -->
+        <!-- BYOK Gemini AI Button -->
         <button @click="showKeyModal = true"
-                :class="apiKey ? 'border-teal-400 text-teal-200 bg-teal-950/50 shadow-teal-500/20' : 'border-cyan-500/30 text-slate-300 bg-[#0c2433]'"
-                class="px-3.5 py-2 text-xs font-medium rounded-xl border hover:border-teal-400 transition-all flex items-center gap-1.5 shadow-sm">
-          <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                :class="apiKey ? 'border-teal-400/80 text-teal-200 bg-teal-950/70 shadow-sm shadow-teal-500/20' : 'border-cyan-500/30 text-slate-200 bg-[#0b2433] hover:border-teal-400/50 hover:bg-[#0f2e42]'"
+                class="h-9 px-2.5 sm:px-3 text-xs font-semibold rounded-xl border transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                :title="apiKey ? (selectedModelDisplay + ' Active') : t('byok')">
+          <svg class="w-3.5 h-3.5 text-teal-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
           </svg>
-          <span x-text="apiKey ? (selectedModelShortLabel + ' Active') : t('byok')"></span>
+          <span class="hidden md:inline" x-text="apiKey ? (selectedModelShortLabel + ' Active') : t('byok')"></span>
+          <span x-show="apiKey" class="w-2 h-2 rounded-full bg-teal-400 animate-pulse flex-shrink-0"></span>
+        </button>
+
+        <!-- Upload Files Button -->
+        <button @click="showUploadModal = true"
+                class="h-9 px-2.5 sm:px-3 text-xs font-semibold rounded-xl bg-teal-500/15 hover:bg-teal-500/25 border border-teal-400/40 hover:border-teal-400 text-teal-200 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                :title="t('uploadModalTitle')">
+          <svg class="w-3.5 h-3.5 text-teal-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <span class="hidden sm:inline" x-text="t('btnUploadFile')"></span>
+          <span x-show="uploadedFiles.length > 0" class="px-1.5 py-0.2 rounded-full text-[10px] bg-teal-400 text-[#071822] font-bold font-mono" x-text="uploadedFiles.length"></span>
         </button>
 
         <!-- Export Dropdown -->
         <div class="relative" x-data="{ open: false }">
           <button @click="open = !open" 
-                  class="px-3.5 py-2 text-xs font-medium rounded-xl bg-[#0c2433] border border-cyan-500/30 text-slate-200 hover:border-teal-400 transition-all flex items-center gap-1.5 shadow-sm">
-            <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  class="h-9 px-2.5 sm:px-3 text-xs font-semibold rounded-xl bg-[#0b2433] hover:bg-[#0f2e42] border border-cyan-500/30 hover:border-teal-400/60 text-slate-200 transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+            <svg class="w-3.5 h-3.5 text-teal-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
-            <span x-text="t('export')"></span>
+            <span class="hidden sm:inline" x-text="t('export')"></span>
           </button>
           <div x-show="open" @click.outside="open = false" 
-               class="absolute right-0 mt-1.5 w-44 twomi-card rounded-xl shadow-2xl py-1.5 z-50 text-xs border border-cyan-500/30">
+               class="absolute right-0 mt-1.5 w-44 twomi-card rounded-xl shadow-2xl py-1.5 z-50 text-xs border border-cyan-500/30"
+               x-transition>
             <button @click="exportData('csv'); open = false" class="w-full text-left px-3.5 py-2 hover:bg-teal-500/10 text-teal-100 flex items-center gap-2">
               <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               Export .CSV
@@ -251,119 +245,17 @@
         </div>
 
         <!-- Reset to Demo Data -->
-        <button @click="resetToDemoData()" title="Restore 5 synthetic edge-case demo items"
-                class="px-3 py-2 text-xs text-teal-300/80 hover:text-white bg-[#0c2433] border border-cyan-500/30 rounded-xl hover:border-teal-400 transition-colors flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button @click="resetToDemoData()" :title="t('reset')"
+                class="h-9 px-2.5 sm:px-3 text-xs font-semibold text-teal-300/80 hover:text-white bg-[#0b2433] hover:bg-[#0f2e42] border border-cyan-500/30 rounded-xl hover:border-teal-400/60 transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+          <svg class="w-3.5 h-3.5 text-teal-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
-          <span class="hidden md:inline" x-text="t('reset')"></span>
+          <span class="hidden sm:inline" x-text="t('reset')"></span>
         </button>
       </div>
 
     </div>
   </header>
-
-  <!-- Twomi Operational Command Center Banner: Clear, Human-Friendly & Telemetry Modules -->
-  <section class="max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 pt-5">
-    <div class="rounded-2xl twomi-card p-4 sm:p-6 border border-cyan-500/25 bg-gradient-to-r from-[#0c2b3b]/90 via-[#0d3445]/80 to-[#104052]/70 relative overflow-hidden">
-      <!-- Ambient operational glow -->
-      <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-teal-400/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div class="absolute left-1/3 -top-10 w-48 h-48 bg-cyan-400/10 rounded-full blur-2xl pointer-events-none"></div>
-      
-      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 relative z-10">
-        <div class="space-y-2 max-w-2xl">
-          <div class="flex items-center gap-2 flex-wrap">
-            <span class="twomi-badge-pill px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase inline-flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-teal-300 animate-pulse"></span>
-              <span x-text="t('bannerTag')"></span>
-            </span>
-            <span class="text-xs text-teal-300/80 font-mono hidden sm:inline" x-text="t('bannerVersion')"></span>
-            
-            <!-- Gemini 3.5+ Status Badge -->
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono inline-flex items-center gap-1.5 border"
-                  :class="apiKey ? 'bg-teal-950/80 text-teal-300 border-teal-400/40 shadow-sm' : 'bg-cyan-950/50 text-cyan-200/80 border-cyan-500/25'">
-              <span class="w-1.5 h-1.5 rounded-full" :class="apiKey ? 'bg-teal-400 animate-pulse' : 'bg-cyan-400'"></span>
-              <span x-text="apiKey ? ('⚡ ' + selectedModelDisplay + ' Active') : '⚡ Gemini 3.5+ Ready'"></span>
-            </span>
-          </div>
-          
-          <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
-            <span class="twomi-gradient-text" x-text="t('bannerTitle')"></span>
-          </h2>
-          <p class="text-xs sm:text-sm text-teal-100/90 leading-relaxed font-normal" x-text="t('bannerDesc')"></p>
-
-          <!-- Quick Action Buttons: Simple Guide Toggle & BYOK Key -->
-          <div class="pt-1 flex items-center gap-2.5 flex-wrap">
-            <button @click="toggleSimpleGuide()" 
-                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-teal-500/20 hover:bg-teal-500/35 text-teal-200 border border-teal-400/40 transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
-              <span x-text="showSimpleGuide ? '✕ ' + t('hideGuide') : '💡 ' + t('simpleGuideToggle')"></span>
-            </button>
-
-            <button @click="showKeyModal = true"
-                    class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#071822]/90 hover:bg-[#0c2433] text-teal-300 border border-cyan-500/30 hover:border-teal-400 transition-colors flex items-center gap-1.5 shadow-sm">
-              <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-              </svg>
-              <span x-text="apiKey ? (t('activeModelLabel') + ': ' + selectedModelShortLabel) : t('byok')"></span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Real-time Operational Telemetry Modules -->
-        <div class="flex items-center gap-2.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0">
-          
-          <!-- WebRTC Jump In Cluster -->
-          <div class="flex items-center gap-2.5 bg-[#061822]/90 border border-teal-500/35 px-3.5 py-2.5 rounded-2xl shadow-sm flex-shrink-0">
-            <div class="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div class="text-[11px]">
-              <div class="flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-                <span class="font-bold text-white leading-tight">WebRTC Live Stream</span>
-              </div>
-              <span class="text-teal-300/80 text-[10px] font-mono" x-text="t('bannerStatNetwork')"></span>
-            </div>
-          </div>
-
-          <!-- VRM 1.0 Avatar Engine -->
-          <div class="flex items-center gap-2.5 bg-[#061822]/90 border border-cyan-500/35 px-3.5 py-2.5 rounded-2xl shadow-sm flex-shrink-0">
-            <div class="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <div class="text-[11px]">
-              <div class="flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                <span class="font-bold text-white leading-tight">3D Avatar Engine</span>
-              </div>
-              <span class="text-cyan-300/80 text-[10px] font-mono" x-text="t('bannerStatAvatar')"></span>
-            </div>
-          </div>
-
-          <!-- Idempotency & Triage Gateway -->
-          <div class="hidden xl:flex items-center gap-2.5 bg-[#061822]/90 border border-emerald-500/35 px-3.5 py-2.5 rounded-2xl shadow-sm flex-shrink-0">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <div class="text-[11px]">
-              <div class="flex items-center gap-1.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                <span class="font-bold text-white leading-tight">Smart Gateway</span>
-              </div>
-              <span class="text-emerald-300/80 text-[10px] font-mono" x-text="t('bannerStatGateway')"></span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- ==================== SIMPLE APP GUIDE (3 STEPS TO UNDERSTAND & USE) ==================== -->
   <section x-show="showSimpleGuide" x-transition:enter="transition ease-out duration-200"
@@ -461,12 +353,29 @@
           </svg>
           <span x-text="t('tabEmail')"></span>
         </button>
+        <!-- Tab 4: Dynamic Files & Context (CSV, JSON, MD) -->
+        <button @click="activeTab = 'context'"
+                :class="activeTab === 'context' ? 'twomi-tab-active font-bold' : 'text-slate-400 hover:text-teal-200 border-transparent'"
+                class="px-3 sm:px-4 py-2 text-xs font-semibold rounded-xl border transition-all flex items-center gap-2">
+          <svg class="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <span x-text="t('tabData')"></span>
+          <span x-show="uploadedFiles.length > 0" class="px-2 py-0.5 rounded-full text-[10px] bg-teal-500/20 text-teal-300 border border-teal-500/30 font-mono" x-text="uploadedFiles.length"></span>
+        </button>
       </nav>
 
-      <!-- Status indicator -->
-      <div class="text-xs text-teal-200/80 hidden sm:flex items-center gap-2 bg-[#092230] px-3 py-1.5 rounded-xl border border-cyan-500/20">
-        <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
-        <span>Gateway: <strong class="text-teal-300">Jump In Realtime Engine Live</strong></span>
+      <!-- Right Actions: Guide Toggle & Gateway Status -->
+      <div class="flex items-center gap-2">
+        <button @click="toggleSimpleGuide()"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#071822] hover:bg-[#0c2433] text-teal-300 border border-cyan-500/30 hover:border-teal-400/60 transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+          <span class="text-xs">💡</span>
+          <span x-text="showSimpleGuide ? t('hideGuide') : t('simpleGuideToggle')"></span>
+        </button>
+        <div class="text-xs text-teal-200/80 hidden sm:flex items-center gap-2 bg-[#092230] px-3 py-1.5 rounded-xl border border-cyan-500/20">
+          <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+          <span>Gateway: <strong class="text-teal-300">Jump In Live</strong></span>
+        </div>
       </div>
     </div>
   </div>
@@ -476,6 +385,25 @@
 
     <!-- ==================== TAB 1: OPERATIONS QUEUE ==================== -->
     <section x-show="activeTab === 'queue'" class="space-y-4">
+
+      <!-- Dynamic Uploaded Context Status Alert -->
+      <div x-show="uploadedFiles && uploadedFiles.length > 0"
+           class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-[#072430] via-[#092d3e] to-[#072430] border border-cyan-500/35 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-lg">
+        <div class="flex items-center gap-2.5 flex-wrap text-xs">
+          <span class="w-2.5 h-2.5 rounded-full bg-teal-400 animate-pulse"></span>
+          <span class="font-bold text-white flex items-center gap-1.5">
+            📁 <span x-text="t('dynamicContextActive')"></span>:
+          </span>
+          <span class="text-teal-200 font-mono text-[11px] bg-[#051722] px-2.5 py-1 rounded-lg border border-cyan-500/30" x-text="activeFilesSummary"></span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <button @click="activeTab = 'context'" class="px-2.5 py-1 rounded-lg bg-teal-500/20 text-teal-200 hover:bg-teal-500/30 border border-teal-400/40 text-[11px] font-semibold transition-colors flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span x-text="t('btnManageContext')"></span>
+          </button>
+          <button @click="resetToDemoData()" class="px-2 py-1 text-slate-400 hover:text-rose-300 text-[11px] transition-colors" x-text="t('reset')"></button>
+        </div>
+      </div>
       
       <!-- Responsive Search, Filter and AI Actions Toolbar -->
       <div class="twomi-card p-3 sm:p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -543,14 +471,26 @@
           </button>
         </div>
 
-        <!-- AI Batch Triage Button -->
-        <button @click="runAIBatchCategorize()" :disabled="isAnalyzing"
-                class="twomi-button-primary px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-          <svg class="w-3.5 h-3.5" :class="isAnalyzing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-          </svg>
-          <span x-text="isAnalyzing ? t('analyzingAI') : t('aiAutoTriage')"></span>
-        </button>
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Quick Upload Button -->
+          <button @click="showUploadModal = true"
+                  class="px-3 py-2 rounded-xl text-xs font-bold bg-[#071d29] hover:bg-[#0c293a] text-teal-300 border border-teal-500/40 hover:border-teal-400 transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                  :title="t('uploadModalTitle')">
+            <svg class="w-3.5 h-3.5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+            <span x-text="t('btnUploadFile')"></span>
+          </button>
+
+          <!-- AI Batch Triage Button -->
+          <button @click="runAIBatchCategorize()" :disabled="isAnalyzing"
+                  class="twomi-button-primary px-4 py-2 rounded-xl text-xs font-bold disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+            <svg class="w-3.5 h-3.5" :class="isAnalyzing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            <span x-text="isAnalyzing ? t('analyzingAI') : t('aiAutoTriage')"></span>
+          </button>
+        </div>
       </div>
 
       <!-- DESKTOP / TABLET QUEUE TABLE -->
@@ -947,6 +887,301 @@
       </div>
     </section>
 
+    <!-- ==================== TAB 4: DYNAMIC FILES & CONTEXT HUB (CSV / JSON / MD) ==================== -->
+    <section x-show="activeTab === 'context'" class="max-w-5xl mx-auto space-y-6">
+      
+      <!-- Hub Header & Status Bar -->
+      <div class="twomi-card p-5 sm:p-6 rounded-2xl border border-cyan-500/30 space-y-3 shadow-2xl">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-cyan-500/20 pb-4">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="w-3 h-3 rounded-full bg-teal-400"></span>
+              <h2 class="text-lg font-bold text-white tracking-wide" x-text="t('contextHubTitle')"></h2>
+              <span class="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30 font-semibold"
+                    x-text="uploadedFiles.length + ' ' + t('filesLoaded')"></span>
+            </div>
+            <p class="text-xs text-teal-100/70 mt-1 leading-relaxed max-w-2xl" x-text="t('contextHubDesc')"></p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button @click="clearAllUploadedFiles()" x-show="uploadedFiles.length > 0"
+                    class="px-3 py-1.5 rounded-xl text-xs text-rose-300 hover:text-white bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/40 transition-colors flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span x-text="t('clearAllFiles')"></span>
+            </button>
+            <button @click="activeTab = 'queue'"
+                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#071822] hover:bg-[#0c2433] text-teal-300 border border-cyan-500/30 hover:border-teal-400 transition-colors flex items-center gap-1.5">
+              <span>📊</span>
+              <span x-text="t('tabQueue')"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Ingestion Settings: Replace vs Append, Auto-triage -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-1 text-xs">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-teal-200/70 font-medium" x-text="t('importModeLabel') + ':'"></span>
+            <div class="inline-flex rounded-xl bg-[#071822] p-0.5 border border-cyan-500/30">
+              <button type="button" @click="fileUploadMode = 'replace'"
+                      :class="fileUploadMode === 'replace' ? 'bg-teal-500/30 text-teal-200 border-teal-400/50 font-bold' : 'text-slate-400 hover:text-slate-200 border-transparent'"
+                      class="px-3 py-1 rounded-lg text-xs border transition-all">
+                <span x-text="t('importModeReplace')"></span>
+              </button>
+              <button type="button" @click="fileUploadMode = 'append'"
+                      :class="fileUploadMode === 'append' ? 'bg-teal-500/30 text-teal-200 border-teal-400/50 font-bold' : 'text-slate-400 hover:text-slate-200 border-transparent'"
+                      class="px-3 py-1 rounded-lg text-xs border transition-all">
+                <span x-text="t('importModeAppend')"></span>
+              </button>
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2 cursor-pointer select-none text-teal-100">
+            <input type="checkbox" x-model="fileAutoTriage" class="rounded border-cyan-500/40 text-teal-500 focus:ring-teal-400 bg-[#071822] w-4 h-4" />
+            <span class="text-xs" x-text="t('autoTriageOnUpload')"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Drag & Drop Upload Zone Card -->
+      <div class="twomi-card p-6 sm:p-8 rounded-2xl border-2 border-dashed transition-all"
+           :class="activeDragOver ? 'border-teal-400 bg-teal-950/30 scale-[1.005]' : 'border-cyan-500/35 hover:border-cyan-400/60 bg-[#071b26]/90'"
+           @dragover.prevent="activeDragOver = true"
+           @dragleave.prevent="activeDragOver = false"
+           @drop.prevent="handleDrop($event)">
+        
+        <input type="file" id="twomi-file-input" multiple accept=".csv,.json,.md,.markdown,.txt" class="hidden"
+               @change="handleFileUpload($event.target.files)" />
+
+        <div class="text-center space-y-4 max-w-lg mx-auto">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300 shadow-inner">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+          </div>
+
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white" x-text="t('uploadDropzoneTitle')"></h3>
+            <p class="text-xs text-teal-200/70 mt-1 leading-relaxed" x-text="t('uploadDropzoneSubtitle')"></p>
+          </div>
+
+          <!-- Format Badges -->
+          <div class="flex items-center justify-center gap-2 flex-wrap text-[11px] font-mono">
+            <span class="px-2.5 py-1 rounded-lg bg-teal-950/80 text-teal-300 border border-teal-500/40">.CSV (Table Data)</span>
+            <span class="px-2.5 py-1 rounded-lg bg-cyan-950/80 text-cyan-300 border border-cyan-500/40">.JSON (Tickets / Context)</span>
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-500/40">.MD (Playbook & SOP)</span>
+          </div>
+
+          <div class="pt-2 flex items-center justify-center gap-3">
+            <button type="button" onclick="document.getElementById('twomi-file-input').click()"
+                    class="twomi-button-primary px-6 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow-lg shadow-teal-500/20">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span x-text="t('btnBrowseFiles')"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 1-Click Realistic Starter Templates -->
+      <div class="twomi-card p-4 sm:p-5 rounded-2xl border border-cyan-500/25 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">⚡</span>
+            <h4 class="text-xs sm:text-sm font-bold text-white" x-text="t('starterTemplatesTitle')"></h4>
+          </div>
+          <span class="text-[11px] text-teal-200/60" x-text="t('starterTemplatesDesc')"></span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- Button 1: Sample CSV -->
+          <button @click="loadStarterFile('csv')"
+                  class="bg-[#051722]/90 hover:bg-[#092537] border border-cyan-500/30 hover:border-teal-400 p-3 rounded-xl text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-teal-200 group-hover:text-white">📄 Sample CSV</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300">6 Items</span>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-snug" x-text="t('loadSampleCsvDesc')"></p>
+            </div>
+            <span class="text-[10px] text-teal-400 mt-2 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              <span x-text="t('btnLoadSample')"></span> →
+            </span>
+          </button>
+
+          <!-- Button 2: Sample JSON -->
+          <button @click="loadStarterFile('json')"
+                  class="bg-[#051722]/90 hover:bg-[#092537] border border-cyan-500/30 hover:border-teal-400 p-3 rounded-xl text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-cyan-200 group-hover:text-white">🧩 Inquiries JSON</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300">3 Items</span>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-snug" x-text="t('loadSampleJsonDesc')"></p>
+            </div>
+            <span class="text-[10px] text-cyan-400 mt-2 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              <span x-text="t('btnLoadSample')"></span> →
+            </span>
+          </button>
+
+          <!-- Button 3: Sample MD -->
+          <button @click="loadStarterFile('md')"
+                  class="bg-[#051722]/90 hover:bg-[#092537] border border-cyan-500/30 hover:border-teal-400 p-3 rounded-xl text-left transition-all group flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-emerald-200 group-hover:text-white">📘 Support SOP .MD</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Knowledge</span>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-snug" x-text="t('loadSampleMdDesc')"></p>
+            </div>
+            <span class="text-[10px] text-emerald-400 mt-2 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              <span x-text="t('btnLoadSample')"></span> →
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Ingested Files List -->
+      <div class="twomi-card p-5 sm:p-6 rounded-2xl border border-cyan-500/30 space-y-4">
+        <div class="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <span>📚</span>
+              <span x-text="t('uploadedFilesTitle')"></span>
+            </h3>
+            <span class="text-xs text-teal-300 font-mono" x-text="'(' + uploadedFiles.length + ')'"></span>
+          </div>
+          <span class="text-[11px] text-teal-200/70" x-text="t('activeFilesHelp')"></span>
+        </div>
+
+        <template x-if="uploadedFiles.length === 0">
+          <div class="text-center py-8 px-4 rounded-xl border border-dashed border-cyan-500/20 bg-[#061520]/50 space-y-2">
+            <div class="text-2xl">📂</div>
+            <p class="text-xs text-slate-400" x-text="t('noFilesUploaded')"></p>
+            <p class="text-[11px] text-teal-300/60" x-text="t('noFilesHint')"></p>
+          </div>
+        </template>
+
+        <div class="space-y-3" x-show="uploadedFiles.length > 0">
+          <template x-for="file in uploadedFiles" :key="file.id">
+            <div class="p-3.5 sm:p-4 rounded-xl border transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-3"
+                 :class="file.isActive ? 'bg-[#07212e]/90 border-teal-500/40 shadow-sm' : 'bg-[#051520]/70 border-cyan-500/20 opacity-70'">
+              
+              <!-- File Info Left -->
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs uppercase font-mono flex-shrink-0 border"
+                     :class="file.type === 'csv' ? 'bg-teal-500/20 border-teal-400/40 text-teal-300' : (file.type === 'json' ? 'bg-cyan-500/20 border-cyan-400/40 text-cyan-300' : 'bg-emerald-500/20 border-emerald-400/40 text-emerald-300')">
+                  <span x-text="file.type"></span>
+                </div>
+
+                <div class="min-w-0 flex-1 space-y-1">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-bold text-white text-xs sm:text-sm truncate" x-text="file.name"></span>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded-full"
+                          :class="file.isActive ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'"
+                          x-text="file.isActive ? t('fileStatusActive') : t('fileStatusInactive')"></span>
+                    <span x-show="file.isQueueLoaded" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                          x-text="t('loadedInQueue')"></span>
+                  </div>
+
+                  <p class="text-[11px] text-teal-100/75 leading-relaxed line-clamp-2" x-text="file.summary"></p>
+                  
+                  <div class="flex items-center gap-3 text-[10px] text-teal-300/60 font-mono">
+                    <span x-text="formatFileSize(file.size)"></span>
+                    <span>•</span>
+                    <span x-text="formatTime(file.timestamp)"></span>
+                    <template x-if="file.recordCount">
+                      <span class="text-teal-200">
+                        <span>•</span> <strong x-text="file.recordCount"></strong> <span x-text="t('recordsCount')"></span>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions Right -->
+              <div class="flex items-center gap-2 flex-wrap self-end md:self-center">
+                <!-- Preview Button -->
+                <button @click="openFilePreview(file)"
+                        class="px-2.5 py-1.5 rounded-lg text-xs bg-[#0b2434] hover:bg-[#103044] text-teal-200 border border-cyan-500/30 transition-colors flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span x-text="t('btnPreviewFile')"></span>
+                </button>
+
+                <!-- Load to Queue Button (for CSV or JSON tickets) -->
+                <template x-if="file.type === 'csv' || (file.type === 'json' && file.parsedData && file.parsedData.type === 'tickets')">
+                  <button @click="applyFileToQueue(file.id, fileUploadMode)"
+                          class="px-2.5 py-1.5 rounded-lg text-xs bg-teal-500/20 hover:bg-teal-500/35 text-teal-200 border border-teal-400/40 font-semibold transition-colors flex items-center gap-1">
+                    <span>⚡</span>
+                    <span x-text="t('btnApplyToQueue')"></span>
+                  </button>
+                </template>
+
+                <!-- Extract Tickets Button (for Markdown) -->
+                <template x-if="file.type === 'md'">
+                  <button @click="extractTicketsFromMdFile(file.id)"
+                          class="px-2.5 py-1.5 rounded-lg text-xs bg-emerald-500/20 hover:bg-emerald-500/35 text-emerald-200 border border-emerald-400/40 font-semibold transition-colors flex items-center gap-1">
+                    <span>📝</span>
+                    <span x-text="t('btnExtractTicketsMd')"></span>
+                  </button>
+                </template>
+
+                <!-- Toggle Active in AI Context -->
+                <button @click="toggleFileActive(file.id)"
+                        :class="file.isActive ? 'bg-[#08202d] text-teal-300 border-teal-500/30' : 'bg-slate-900 text-slate-400 border-slate-700'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs border transition-colors flex items-center gap-1">
+                  <span x-text="file.isActive ? '✓ AI Context' : '○ Disabled'"></span>
+                </button>
+
+                <!-- Remove Button -->
+                <button @click="removeUploadedFile(file.id)"
+                        class="p-1.5 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-950/40 transition-colors"
+                        :title="t('btnRemoveFile')">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </button>
+              </div>
+
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Raw Text Direct Ingestion Tool (Direct Paste) -->
+      <div class="twomi-card p-5 sm:p-6 rounded-2xl border border-cyan-500/30 space-y-3">
+        <div class="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+              <span>📋</span>
+              <span x-text="t('pasteRawTitle')"></span>
+            </h3>
+            <p class="text-xs text-teal-100/70 mt-0.5" x-text="t('pasteRawDesc')"></p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-teal-200/70" x-text="t('pasteFormatLabel') + ':'"></span>
+            <select x-model="rawPasteFormat" aria-label="Format Selector"
+                    class="bg-[#071822] text-xs font-semibold text-teal-200 border border-cyan-500/30 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-teal-400">
+              <option value="csv">CSV (Comma Separated)</option>
+              <option value="json">JSON (Array / Object)</option>
+              <option value="md">Markdown (.MD)</option>
+            </select>
+          </div>
+        </div>
+
+        <textarea x-model="rawPasteText" rows="5"
+                  :placeholder="rawPasteFormat === 'csv' ? 'id,name,email,subject,message,priority,category\nCSV-1,Alex,alex@stream.live,Lag issue,Audio lagging,High,Audio / Latency Sync' : (rawPasteFormat === 'json' ? '[ { &quot;subject&quot;: &quot;Refund request&quot;, &quot;message&quot;: &quot;Please refund gift coin&quot;, &quot;email&quot;: &quot;user@live.io&quot; } ]' : '# Operations Knowledge\n- Refund SLA is 24h.\n- Payouts occur on 1st & 15th.')"
+                  class="w-full font-mono bg-[#071822] border border-cyan-500/30 rounded-xl p-3 text-xs text-teal-100 focus:outline-none focus:border-teal-400 leading-relaxed"></textarea>
+
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-[11px] text-teal-200/60" x-text="t('pasteRawHint')"></span>
+          <button @click="ingestRawPastedText()" :disabled="!rawPasteText || !rawPasteText.trim()"
+                  class="twomi-button-primary px-5 py-2 rounded-xl text-xs font-bold disabled:opacity-40 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            <span x-text="t('btnParseAndIngest')"></span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
   <!-- ==================== MODAL: INSPECT TICKET & AI INTENT ==================== -->
@@ -1062,6 +1297,14 @@
                 <div><span class="text-teal-200/60 block" x-text="t('detectedIntent')"></span> <span class="font-semibold text-slate-100" x-text="selectedItem.aiIntent || t('analyzing')"></span></div>
                 <div><span class="text-teal-200/60 block" x-text="t('sentiment')"></span> <span :class="getSentimentClass(selectedItem.sentiment)" class="text-[10px] px-2 py-0.5 rounded-md border inline-block mt-0.5" x-text="getSentimentLabel(selectedItem.sentiment)"></span></div>
               </div>
+
+              <!-- Dynamic Grounding Indicator -->
+              <template x-if="activeContextFilesCount > 0">
+                <div class="flex items-center gap-1.5 text-[10px] text-cyan-300 bg-cyan-950/70 px-2.5 py-1 rounded-lg border border-cyan-500/35">
+                  <span>📘</span>
+                  <span><strong x-text="t('groundedByContext') + ':'"></strong> <span x-text="activeFilesSummary"></span></span>
+                </div>
+              </template>
               <template x-if="selectedItem && selectedItem.aiSuggestedReply">
                 <div class="pt-2 border-t border-teal-500/20">
                   <div class="flex items-center justify-between mb-1">
@@ -1282,6 +1525,182 @@
           <button @click="showKeyModal = false" class="px-3.5 py-2 text-xs text-teal-200 hover:text-white" x-text="t('keyModalCancel')"></button>
           <button @click="saveApiKey()" class="twomi-button-primary px-5 py-2 text-xs rounded-xl font-bold shadow-md shadow-teal-500/20" x-text="t('keyModalSave')"></button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: QUICK FILE UPLOAD (CSV, JSON, MD) ==================== -->
+  <div x-show="showUploadModal" class="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div @click.outside="showUploadModal = false" class="twomi-card w-full max-w-lg rounded-2xl border border-cyan-500/35 p-5 sm:p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📁</span>
+          <div>
+            <h3 class="text-sm sm:text-base font-bold text-white" x-text="t('uploadModalTitle')"></h3>
+            <span class="text-[10px] text-teal-300 font-mono font-semibold" x-text="t('uploadModalSubtitle')"></span>
+          </div>
+        </div>
+        <button @click="showUploadModal = false" class="text-teal-300 hover:text-white p-1 rounded-lg hover:bg-white/10">✕</button>
+      </div>
+
+      <!-- Ingestion Mode: Replace or Append -->
+      <div class="flex items-center justify-between gap-3 text-xs bg-[#071822] p-2.5 rounded-xl border border-cyan-500/25">
+        <span class="text-teal-200/80 font-medium" x-text="t('importModeLabel') + ':'"></span>
+        <div class="inline-flex rounded-lg bg-[#05131c] p-0.5 border border-cyan-500/30">
+          <button type="button" @click="fileUploadMode = 'replace'"
+                  :class="fileUploadMode === 'replace' ? 'bg-teal-500/30 text-teal-200 border-teal-400/50 font-bold' : 'text-slate-400 hover:text-slate-200 border-transparent'"
+                  class="px-2.5 py-1 rounded text-xs border transition-all">
+            <span x-text="t('importModeReplace')"></span>
+          </button>
+          <button type="button" @click="fileUploadMode = 'append'"
+                  :class="fileUploadMode === 'append' ? 'bg-teal-500/30 text-teal-200 border-teal-400/50 font-bold' : 'text-slate-400 hover:text-slate-200 border-transparent'"
+                  class="px-2.5 py-1 rounded text-xs border transition-all">
+            <span x-text="t('importModeAppend')"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drag & Drop Zone inside modal -->
+      <div class="p-6 rounded-xl border-2 border-dashed border-cyan-500/30 hover:border-teal-400/60 bg-[#061822]/80 text-center space-y-3 transition-colors"
+           @dragover.prevent="activeDragOver = true"
+           @dragleave.prevent="activeDragOver = false"
+           @drop.prevent="handleDrop($event); showUploadModal = false">
+        
+        <input type="file" id="twomi-modal-file-input" multiple accept=".csv,.json,.md,.markdown,.txt" class="hidden"
+               @change="handleFileUpload($event.target.files); showUploadModal = false" />
+
+        <div class="w-12 h-12 mx-auto rounded-xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-300">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+        </div>
+
+        <div>
+          <p class="text-xs font-semibold text-slate-100" x-text="t('uploadDropzoneTitle')"></p>
+          <p class="text-[11px] text-teal-200/60 mt-0.5" x-text="t('uploadDropzoneSubtitle')"></p>
+        </div>
+
+        <button type="button" onclick="document.getElementById('twomi-modal-file-input').click()"
+                class="twomi-button-primary px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-teal-500/20">
+          <span x-text="t('btnBrowseFiles')"></span>
+        </button>
+      </div>
+
+      <!-- 1-Click Starters inside modal -->
+      <div class="space-y-2 pt-1">
+        <span class="text-[11px] font-semibold text-teal-200/80 block" x-text="t('starterTemplatesTitle') + ':'"></span>
+        <div class="grid grid-cols-3 gap-2 text-xs">
+          <button @click="loadStarterFile('csv'); showUploadModal = false"
+                  class="p-2 rounded-lg bg-[#071822] hover:bg-[#0c2636] border border-cyan-500/30 text-teal-200 text-left text-[11px] font-medium transition-colors">
+            📄 Sample CSV
+          </button>
+          <button @click="loadStarterFile('json'); showUploadModal = false"
+                  class="p-2 rounded-lg bg-[#071822] hover:bg-[#0c2636] border border-cyan-500/30 text-cyan-200 text-left text-[11px] font-medium transition-colors">
+            🧩 Inquiries JSON
+          </button>
+          <button @click="loadStarterFile('md'); showUploadModal = false"
+                  class="p-2 rounded-lg bg-[#071822] hover:bg-[#0c2636] border border-cyan-500/30 text-emerald-200 text-left text-[11px] font-medium transition-colors">
+            📘 Support SOP .MD
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-cyan-500/20 text-xs">
+        <button @click="activeTab = 'context'; showUploadModal = false" class="text-teal-300 hover:underline flex items-center gap-1 font-semibold">
+          <span>📚</span>
+          <span x-text="t('btnOpenFullHub')"></span>
+        </button>
+        <button @click="showUploadModal = false" class="px-4 py-1.5 rounded-lg bg-[#0c2433] hover:bg-[#113145] text-slate-200" x-text="t('close')"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: FILE CONTENT PREVIEW ==================== -->
+  <div x-show="showFilePreviewModal" class="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+    <div @click.outside="showFilePreviewModal = false" class="twomi-card w-full max-w-3xl rounded-2xl border border-cyan-500/35 p-5 sm:p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-cyan-500/20 pb-3">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <span class="text-xl flex-shrink-0" x-text="previewingFile ? (previewingFile.type === 'csv' ? '📄' : (previewingFile.type === 'json' ? '🧩' : '📘')) : '📄'"></span>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="text-sm sm:text-base font-bold text-white truncate" x-text="previewingFile ? previewingFile.name : ''"></h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase font-bold"
+                    :class="previewingFile && previewingFile.type === 'csv' ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : (previewingFile && previewingFile.type === 'json' ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30')"
+                    x-text="previewingFile ? previewingFile.type : ''"></span>
+            </div>
+            <p class="text-[11px] text-teal-200/70 truncate mt-0.5" x-text="previewingFile ? previewingFile.summary : ''"></p>
+          </div>
+        </div>
+        <button @click="showFilePreviewModal = false" class="text-teal-300 hover:text-white p-1 rounded-lg hover:bg-white/10">✕</button>
+      </div>
+
+      <!-- Preview Body -->
+      <div class="space-y-3 text-xs max-h-[60vh] overflow-y-auto pr-1 font-mono">
+        <template x-if="previewingFile">
+          <div>
+            <!-- Table Preview for CSV or JSON tickets -->
+            <template x-if="previewingFile.type === 'csv' || (previewingFile.type === 'json' && previewingFile.parsedData && previewingFile.parsedData.items && previewingFile.parsedData.items.length > 0)">
+              <div class="space-y-2">
+                <div class="overflow-x-auto rounded-xl border border-cyan-500/25 bg-[#05131c]">
+                  <table class="w-full text-left text-[11px]">
+                    <thead>
+                      <tr class="bg-[#081e2b] text-teal-200 font-semibold border-b border-cyan-500/20">
+                        <th class="py-2 px-3">ID</th>
+                        <th class="py-2 px-3">Sender</th>
+                        <th class="py-2 px-3">Subject</th>
+                        <th class="py-2 px-3">Priority</th>
+                        <th class="py-2 px-3">Category</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-cyan-500/10 text-slate-200">
+                      <template x-for="item in (previewingFile.parsedData && previewingFile.parsedData.items ? previewingFile.parsedData.items.slice(0, 20) : (previewingFile.parsedData && previewingFile.parsedData.slice ? previewingFile.parsedData.slice(0, 20) : []))" :key="item.id">
+                        <tr class="hover:bg-teal-500/5">
+                          <td class="py-2 px-3 text-teal-300 font-mono text-[10px]" x-text="item.id"></td>
+                          <td class="py-2 px-3 truncate max-w-[120px]" x-text="item.name || item.email || '—'"></td>
+                          <td class="py-2 px-3 truncate max-w-[200px]" x-text="item.subject"></td>
+                          <td class="py-2 px-3">
+                            <span :class="getPriorityClass(item.priority)" class="text-[10px] px-1.5 py-0.5 rounded border" x-text="item.priority"></span>
+                          </td>
+                          <td class="py-2 px-3 text-teal-200/80 text-[10px]" x-text="item.category"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </template>
+
+            <!-- Raw text / Markdown / JSON tree -->
+            <div class="mt-3">
+              <span class="text-[10px] font-semibold text-teal-300/70 block mb-1">RAW FILE CONTENT:</span>
+              <pre class="bg-[#05131c] p-3 rounded-xl border border-cyan-500/20 text-teal-100 text-[11px] whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto" x-text="previewingFile.content"></pre>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Preview Footer Actions -->
+      <div class="flex items-center justify-between pt-2 border-t border-cyan-500/20 text-xs">
+        <div class="flex items-center gap-2">
+          <!-- Load to Queue Button -->
+          <template x-if="previewingFile && (previewingFile.type === 'csv' || (previewingFile.type === 'json' && previewingFile.parsedData && previewingFile.parsedData.items))">
+            <button @click="applyFileToQueue(previewingFile.id, fileUploadMode); showFilePreviewModal = false"
+                    class="twomi-button-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-teal-500/20">
+              <span>⚡</span>
+              <span x-text="t('btnApplyToQueue')"></span>
+            </button>
+          </template>
+          <!-- Extract Tickets Button for MD -->
+          <template x-if="previewingFile && previewingFile.type === 'md'">
+            <button @click="extractTicketsFromMdFile(previewingFile.id); showFilePreviewModal = false"
+                    class="twomi-button-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-teal-500/20">
+              <span>📝</span>
+              <span x-text="t('btnExtractTicketsMd')"></span>
+            </button>
+          </template>
+        </div>
+
+        <button @click="showFilePreviewModal = false" class="px-4 py-2 rounded-xl bg-[#0c2433] hover:bg-[#113145] text-slate-200" x-text="t('close')"></button>
       </div>
     </div>
   </div>
@@ -1546,6 +1965,28 @@
         toasts: [],
         newTimelineNote: '',
         
+        // Dynamic Files & Ingestion State (CSV, JSON, MD)
+        uploadedFiles: [],
+        fileUploadMode: 'replace',
+        fileAutoTriage: true,
+        showUploadModal: false,
+        showFilePreviewModal: false,
+        previewingFile: null,
+        rawPasteText: '',
+        rawPasteFormat: 'csv',
+        activeDragOver: false,
+        isUploading: false,
+
+        get activeContextFilesCount() {
+          return (this.uploadedFiles || []).filter(f => f.isActive).length;
+        },
+
+        get activeFilesSummary() {
+          const active = (this.uploadedFiles || []).filter(f => f.isActive);
+          if (active.length === 0) return this.t('noFilesUploaded');
+          return active.map(f => f.name).join(', ');
+        },
+        
         toggleSimpleGuide() {
           this.showSimpleGuide = !this.showSimpleGuide;
           try { localStorage.setItem('twomi_show_simple_guide', this.showSimpleGuide ? 'true' : 'false'); } catch(e){}
@@ -1767,7 +2208,57 @@ Channel ID: @MayaLive_Twomi`,
             timeAgoMins: 'm ago',
             timeAgoHours: 'h ago',
             timeAgoDays: 'd ago',
-            chatPresetHistory: 'Ticket History & Audit Timeline'
+            chatPresetHistory: 'Ticket History & Audit Timeline',
+            tabFiles: 'Files & Context',
+            tabData: 'Files & Context',
+            btnUploadFile: 'Upload Files',
+            contextHubTitle: 'Dynamic Data & Context Ingestion Hub',
+            contextHubDesc: 'Upload custom CSV, JSON, or Markdown (.MD) files to dynamically power the live queue and ground Gemini 3.5+ AI in your specific rules and tickets.',
+            filesLoaded: 'Files Active',
+            clearAllFiles: 'Clear All Files',
+            importModeLabel: 'Import Mode',
+            importModeReplace: 'Replace Queue',
+            importModeAppend: 'Append to Queue',
+            autoTriageOnUpload: 'Auto-run Gemini 3.5+ AI Triage on Upload',
+            uploadDropzoneTitle: 'Drag & Drop CSV, JSON, or Markdown Files Here',
+            uploadDropzoneSubtitle: 'or click to browse from your computer (.csv, .json, .md, .txt)',
+            btnBrowseFiles: 'Browse Files',
+            starterTemplatesTitle: '1-Click Starter Files & Context',
+            starterTemplatesDesc: 'Load realistic sample files to test dynamic parsing and Gemini grounding',
+            loadSampleCsvDesc: 'Tabular support queue with auto column detection & duplicate checks',
+            loadSampleJsonDesc: 'Structured creator requests with priorities, categories, and payloads',
+            loadSampleMdDesc: 'Live support policy SOP with monetization rules and action items',
+            btnLoadSample: 'Load Template',
+            uploadedFilesTitle: 'Active Ingested Files & Context Store',
+            activeFilesHelp: 'Files marked Active are fed directly to Gemini 3.5+ as live context',
+            noFilesUploaded: 'No custom files uploaded yet',
+            noFilesHint: 'Drag and drop CSV, JSON, or MD files above, or click a 1-click starter template.',
+            fileStatusActive: 'Active in AI',
+            fileStatusInactive: 'Disabled',
+            loadedInQueue: 'Loaded in Queue',
+            recordsCount: 'records',
+            btnPreviewFile: 'Preview',
+            btnApplyToQueue: 'Load to Queue',
+            btnExtractTicketsMd: 'Extract Tickets',
+            btnRemoveFile: 'Remove File',
+            pasteRawTitle: 'Direct Raw Text Ingestion',
+            pasteRawDesc: 'Paste raw CSV, JSON, or Markdown text directly to ingest dynamically without files',
+            pasteFormatLabel: 'Format',
+            pasteRawHint: 'Auto-detects columns and tickets without needing file downloads',
+            btnParseAndIngest: 'Parse & Ingest Text',
+            uploadModalTitle: 'Upload Custom Files (CSV, JSON, MD)',
+            uploadModalSubtitle: 'Dynamic Ingestion & Gemini 3.5+ Knowledge Grounding',
+            btnOpenFullHub: 'Open Full Files & Context Hub',
+            opQueueReplacedTitle: 'Queue Replaced from File',
+            opQueueAppendedTitle: 'Tickets Appended to Queue',
+            opContextLoadedTitle: 'Knowledge Context Loaded',
+            activeContextBannerTitle: 'Active Dynamic Context Files Grounding Gemini 3.5+',
+            btnManageFiles: 'Manage Files',
+            btnManageContext: 'Manage Files',
+            dynamicContextActive: 'Active Context Files',
+            groundedByContext: 'Context Grounding',
+            aiGroundingActive: 'AI Grounded in Uploaded Context',
+            aiGroundingActiveTooltip: 'Gemini uses policies and records from uploaded files to triage this ticket'
           },
           vi: {
             subtitle: 'Quản lý Yêu cầu & Hàng đợi Trực quan',
@@ -1927,7 +2418,57 @@ Channel ID: @MayaLive_Twomi`,
             timeAgoMins: 'phút trước',
             timeAgoHours: 'giờ trước',
             timeAgoDays: 'ngày trước',
-            chatPresetHistory: 'Lịch sử Hoạt động & Nhật ký Ticket'
+            chatPresetHistory: 'Lịch sử Hoạt động & Nhật ký Ticket',
+            tabFiles: 'Tệp & Ngữ cảnh',
+            tabData: 'Tệp & Ngữ cảnh',
+            btnUploadFile: 'Nạp Tệp',
+            contextHubTitle: 'Trung tâm Nạp Tệp & Ngữ Cảnh Động',
+            contextHubDesc: 'Nạp file CSV, JSON hoặc Markdown (.MD) tùy chỉnh để vận hành hàng đợi động và cung cấp ngữ cảnh kiến thức thực tế cho AI Gemini 3.5+.',
+            filesLoaded: 'Tệp đang hoạt động',
+            clearAllFiles: 'Xóa Tất Cả Tệp',
+            importModeLabel: 'Chế độ Nạp',
+            importModeReplace: 'Thay thế Hàng đợi',
+            importModeAppend: 'Thêm vào Hàng đợi',
+            autoTriageOnUpload: 'Tự động phân loại Gemini 3.5+ khi nạp file',
+            uploadDropzoneTitle: 'Kéo thả Tệp CSV, JSON, hoặc Markdown vào đây',
+            uploadDropzoneSubtitle: 'hoặc bấm để chọn tệp từ máy tính của bạn (.csv, .json, .md, .txt)',
+            btnBrowseFiles: 'Chọn Tệp từ Máy',
+            starterTemplatesTitle: 'Mẫu Tệp Nạp Sẵn 1-Click',
+            starterTemplatesDesc: 'Nạp thử dữ liệu mẫu thực tế để kiểm tra khả năng bóc tách động và AI grounding',
+            loadSampleCsvDesc: 'Bảng yêu cầu hỗ trợ với nhận diện cột tự động và phát hiện trùng lặp',
+            loadSampleJsonDesc: 'Dữ liệu yêu cầu creator có cấu trúc với độ ưu tiên và phân loại',
+            loadSampleMdDesc: 'Tài liệu quy trình SOP hỗ trợ, quy định hoàn tiền và danh sách việc cần làm',
+            btnLoadSample: 'Nạp Mẫu',
+            uploadedFilesTitle: 'Danh sách Tệp Đã Nạp & Kho Ngữ Cảnh',
+            activeFilesHelp: 'Các tệp được bật sẽ được truyền trực tiếp làm Grounding Context cho Gemini 3.5+',
+            noFilesUploaded: 'Chưa có tệp nào được tải lên',
+            noFilesHint: 'Kéo thả tệp CSV, JSON hoặc MD ở trên, hoặc bấm vào một trong các mẫu 1-click.',
+            fileStatusActive: 'Đang dùng cho AI',
+            fileStatusInactive: 'Tạm tắt',
+            loadedInQueue: 'Đã nạp vào Queue',
+            recordsCount: 'bản ghi',
+            btnPreviewFile: 'Xem trước',
+            btnApplyToQueue: 'Nạp vào Hàng đợi',
+            btnExtractTicketsMd: 'Trích xuất Việc',
+            btnRemoveFile: 'Xóa tệp',
+            pasteRawTitle: 'Nạp Trực Tiếp Văn Bản Thô',
+            pasteRawDesc: 'Dán trực tiếp văn bản định dạng CSV, JSON hoặc Markdown để nạp nhanh',
+            pasteFormatLabel: 'Định dạng',
+            pasteRawHint: 'Tự động phân tích cột và ticket mà không cần tải file về máy',
+            btnParseAndIngest: 'Phân tích & Nạp',
+            uploadModalTitle: 'Nạp Tệp Tùy Chỉnh (CSV, JSON, MD)',
+            uploadModalSubtitle: 'Xử lý dữ liệu động & Cung cấp tri thức cho Gemini 3.5+',
+            btnOpenFullHub: 'Mở Trung tâm Quản lý Tệp',
+            opQueueReplacedTitle: 'Đã Thay Thế Hàng Đợi Bằng File',
+            opQueueAppendedTitle: 'Đã Thêm Đơn từ File vào Hàng Đợi',
+            opContextLoadedTitle: 'Đã Nạp Ngữ Cảnh Kiến Thức',
+            activeContextBannerTitle: 'Tệp Ngữ Cảnh Động Đang Cung Cấp Tri Thức Cho Gemini 3.5+',
+            btnManageFiles: 'Quản lý Tệp',
+            btnManageContext: 'Quản lý Tệp',
+            dynamicContextActive: 'Tệp Ngữ Cảnh Đang Hoạt Động',
+            groundedByContext: 'Ngữ cảnh tham chiếu',
+            aiGroundingActive: 'AI Dựa Trên Ngữ Cảnh Tệp Đã Nạp',
+            aiGroundingActiveTooltip: 'Gemini tự động dựa trên quy tắc và chính sách trong tệp đã nạp để phân loại'
           },
           ja: {
             subtitle: 'Twomi シンプルリクエスト管理＆ライブキュー',
@@ -2087,7 +2628,57 @@ Channel ID: @MayaLive_Twomi`,
             timeAgoMins: '分前',
             timeAgoHours: '時間前',
             timeAgoDays: '日前',
-            chatPresetHistory: 'チケット履歴・タイムライン'
+            chatPresetHistory: 'チケット履歴・タイムライン',
+            tabFiles: 'ファイル＆コンテキスト',
+            tabData: 'ファイル＆コンテキスト',
+            btnUploadFile: 'ファイル追加',
+            contextHubTitle: '動的ファイル連携＆ナレッジハブ',
+            contextHubDesc: '独自のCSV、JSON、Markdown（.MD）をアップロードして、ライブキューへの動的取り込みやGemini 3.5+ AIのナレッジとして活用します。',
+            filesLoaded: '件のファイル有効',
+            clearAllFiles: 'すべてのファイルを削除',
+            importModeLabel: '取り込みモード',
+            importModeReplace: 'キューを置き換える',
+            importModeAppend: 'キューに追加する',
+            autoTriageOnUpload: 'アップロード時にGemini 3.5+自動分類を実行',
+            uploadDropzoneTitle: 'CSV、JSON、Markdownファイルをここにドラッグ＆ドロップ',
+            uploadDropzoneSubtitle: 'またはクリックして端末から選択 (.csv, .json, .md, .txt)',
+            btnBrowseFiles: 'ファイルを選択',
+            starterTemplatesTitle: 'ワンクリックサンプルファイル',
+            starterTemplatesDesc: '実際のサンプルデータを読み込んで動的パースとAI連携をテスト',
+            loadSampleCsvDesc: '列自動認識・重複判定付きの問い合わせテーブルデータ',
+            loadSampleJsonDesc: '優先度・カテゴリー・本文を含む構造化リクエストデータ',
+            loadSampleMdDesc: '報酬規定やタスク一覧を含む運用マニュアル・SLAドキュメント',
+            btnLoadSample: 'サンプルを読み込む',
+            uploadedFilesTitle: '読み込み済みファイル＆ナレッジ一覧',
+            activeFilesHelp: '「有効」に設定されたファイルはGemini 3.5+の推論コンテキストとして活用されます',
+            noFilesUploaded: 'アップロードされたファイルはありません',
+            noFilesHint: '上記のエリアにファイルをドラッグ＆ドロップするか、サンプルをクリックしてください。',
+            fileStatusActive: 'AI連携中',
+            fileStatusInactive: '無効',
+            loadedInQueue: 'キューに反映済み',
+            recordsCount: '件のデータ',
+            btnPreviewFile: 'プレビュー',
+            btnApplyToQueue: 'キューに適用',
+            btnExtractTicketsMd: 'タスクを抽出',
+            btnRemoveFile: 'ファイルを削除',
+            pasteRawTitle: 'テキスト直接入力・取り込み',
+            pasteRawDesc: 'CSV、JSON、Markdownのテキストを直接貼り付けて即座に取り込みます',
+            pasteFormatLabel: '形式',
+            pasteRawHint: 'ファイルをダウンロードすることなく即座に解析・取り込み可能',
+            btnParseAndIngest: 'テキストを解析して取り込む',
+            uploadModalTitle: 'ファイルアップロード (CSV, JSON, MD)',
+            uploadModalSubtitle: '動的データ取り込み＆Gemini 3.5+ナレッジ連携',
+            btnOpenFullHub: 'ファイルハブを開く',
+            opQueueReplacedTitle: 'ファイルからキューを置き換えました',
+            opQueueAppendedTitle: 'ファイルからキューに追加しました',
+            opContextLoadedTitle: 'ナレッジコンテキストを読み込みました',
+            activeContextBannerTitle: 'Gemini 3.5+ に連携中の動的コンテキストファイル',
+            btnManageFiles: 'ファイル管理',
+            btnManageContext: 'ファイル管理',
+            dynamicContextActive: '有効なコンテキストファイル',
+            groundedByContext: '参照コンテキスト',
+            aiGroundingActive: 'アップロードされたコンテキストに基づきAI推論',
+            aiGroundingActiveTooltip: 'Geminiがアップロードされた規定・データに基づいてチケットを分析しています'
           }
         },
 
@@ -2119,6 +2710,11 @@ Channel ID: @MayaLive_Twomi`,
           const savedGuide = localStorage.getItem('twomi_show_simple_guide');
           this.showSimpleGuide = savedGuide !== 'false';
           this.currentLang = localStorage.getItem('twomi_lang') || 'en';
+
+          const savedFiles = localStorage.getItem('twomi_uploaded_files');
+          if (savedFiles) {
+            try { this.uploadedFiles = JSON.parse(savedFiles); } catch(e){}
+          }
 
           const saved = localStorage.getItem('twomi_queue_data');
           if (saved) {
@@ -2910,12 +3506,16 @@ Channel ID: @MayaLive_Twomi`,
           const modelToUse = this.getActiveModelIdentifier();
 
           try {
-            const prompt = `You are lead Operations AI for Twomi request management platform.
-Return strict JSON with:
+            const dynamicContext = this.getDynamicContextPrompt();
+            let prompt = `You are lead Operations AI for Twomi request management platform.`;
+            if (dynamicContext) {
+              prompt += `\n\n--- DYNAMIC CONTEXT & OPERATIONAL GUIDELINES (FROM UPLOADED CSV/JSON/MD FILES) ---\n${dynamicContext}\n---------------------------------------------------------------------------------\nNOTE: You MUST adapt your category selection, priority rating, intent identification, and suggestedReply to follow any rules, policies, or domain knowledge in the uploaded files above!`;
+            }
+            prompt += `\nReturn strict JSON with:
 - category ("Avatar Tech & Rigging", "Jump In Streaming", "Creator Studio & Payouts", "Account & VIP Access", "Audio / Latency Sync", "General Inquiry")
 - sentiment ("Positive", "Neutral", "Frustrated", "Urgent")
 - intent (short phrase, e.g. "Avatar Motion Bug")
-- suggestedReply (polite 2-sentence operator response)
+- suggestedReply (polite 2-sentence operator response referencing policies or context when applicable)
 
 Sender: ${item.name || 'User'} (${item.email || 'None'})
 Subject: ${item.subject || ''}
@@ -3016,6 +3616,7 @@ Message: ${item.message || ''}`;
         saveToStorage() {
           try {
             localStorage.setItem('twomi_queue_data', JSON.stringify(this.queue));
+            localStorage.setItem('twomi_uploaded_files', JSON.stringify(this.uploadedFiles));
           } catch(e) {
             this.showOpError('ERR_STORAGE_WRITE', 'Storage IO Error', 'Could not persist queue to localStorage: quota exceeded.', 'PERSISTENCE_LAYER');
           }
@@ -3122,6 +3723,615 @@ Message: ${item.message || ''}`;
           this.showOpSuccess('OP_DATA_EXPORTED', 'Queue File Exported', `Generated and downloaded ${filename}`, 'IO_EXPORTER');
         },
 
+        formatFileSize(bytes) {
+          if (!bytes || bytes === 0) return '0 B';
+          const k = 1024;
+          const sizes = ['B', 'KB', 'MB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        },
+
+        parseCSV(text, filename = 'data.csv') {
+          const lines = [];
+          let row = [];
+          let inQuotes = false;
+          let currentField = '';
+          const cleanText = text.replace(/^\uFEFF/, '');
+
+          for (let i = 0; i < cleanText.length; i++) {
+            const char = cleanText[i];
+            const nextChar = cleanText[i + 1];
+
+            if (char === '"') {
+              if (inQuotes && nextChar === '"') {
+                currentField += '"';
+                i++;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              row.push(currentField.trim());
+              currentField = '';
+            } else if ((char === '\r' || char === '\n') && !inQuotes) {
+              if (char === '\r' && nextChar === '\n') i++;
+              row.push(currentField.trim());
+              if (row.some(f => f.length > 0)) lines.push(row);
+              row = [];
+              currentField = '';
+            } else {
+              currentField += char;
+            }
+          }
+          if (currentField.length > 0 || row.length > 0) {
+            row.push(currentField.trim());
+            if (row.some(f => f.length > 0)) lines.push(row);
+          }
+
+          if (lines.length < 2) throw new Error('CSV must contain at least a header row and 1 data row.');
+
+          const rawHeaders = lines[0].map(h => h.toLowerCase().replace(/[^a-z0-9_]/g, '_'));
+          const findCol = (possible) => {
+            for (const p of possible) {
+              const idx = rawHeaders.findIndex(h => h.includes(p));
+              if (idx !== -1) return idx;
+            }
+            return -1;
+          };
+
+          const idCol = findCol(['id', 'ticket', 'issue_num', 'ref', 'key']);
+          const nameCol = findCol(['name', 'sender', 'customer', 'user', 'author', 'from']);
+          const emailCol = findCol(['email', 'mail', 'sender_email', 'contact']);
+          const subjCol = findCol(['subject', 'title', 'issue', 'summary', 'topic', 'headline']);
+          const msgCol = findCol(['message', 'description', 'content', 'body', 'detail', 'text', 'inquiry']);
+          const catCol = findCol(['category', 'type', 'dept', 'department', 'tag', 'topic']);
+          const prioCol = findCol(['priority', 'urgency', 'severity', 'level']);
+          const statusCol = findCol(['status', 'state']);
+          const assigneeCol = findCol(['assignee', 'agent', 'assigned_to', 'owner', 'staff']);
+          const sourceCol = findCol(['source', 'channel', 'origin', 'platform']);
+
+          const items = [];
+          for (let r = 1; r < lines.length; r++) {
+            const row = lines[r];
+            if (row.length === 0 || row.every(c => !c)) continue;
+
+            const subject = (subjCol !== -1 && row[subjCol]) ? row[subjCol] : (row[0] || 'Imported Request');
+            const message = (msgCol !== -1 && row[msgCol]) ? row[msgCol] : (row.slice(1).filter(Boolean).join(' ') || subject);
+            const name = (nameCol !== -1 && row[nameCol]) ? row[nameCol] : '';
+            const email = (emailCol !== -1 && row[emailCol]) ? row[emailCol] : '';
+
+            const rawPrio = (prioCol !== -1 && row[prioCol]) ? row[prioCol].toLowerCase() : 'normal';
+            let priority = 'Normal';
+            if (rawPrio.includes('urg') || rawPrio.includes('crit') || rawPrio.includes('p1')) priority = 'Urgent';
+            else if (rawPrio.includes('high') || rawPrio.includes('p2')) priority = 'High';
+            else if (rawPrio.includes('low') || rawPrio.includes('p4')) priority = 'Low';
+
+            const rawStatus = (statusCol !== -1 && row[statusCol]) ? row[statusCol].toLowerCase() : 'pending';
+            let status = 'Pending';
+            if (rawStatus.includes('prog') || rawStatus.includes('open')) status = 'In Progress';
+            else if (rawStatus.includes('resolv') || rawStatus.includes('close') || rawStatus.includes('done')) status = 'Resolved';
+            else if (rawStatus.includes('dup') || rawStatus.includes('incomp') || rawStatus.includes('flag')) status = 'Incomplete/Duplicate';
+
+            const source = (sourceCol !== -1 && row[sourceCol]) ? row[sourceCol] : `CSV (${filename})`;
+            const category = (catCol !== -1 && row[catCol]) ? row[catCol] : 'General Inquiry';
+            const assignee = (assigneeCol !== -1 && row[assigneeCol]) ? row[assigneeCol] : 'Unassigned';
+            const id = (idCol !== -1 && row[idCol]) ? row[idCol] : ('CSV-' + (1000 + items.length + 1));
+
+            items.push({
+              id: String(id).startsWith('TWM-') || String(id).startsWith('CSV-') ? String(id) : 'CSV-' + id,
+              source,
+              name,
+              email,
+              subject,
+              message,
+              category,
+              priority,
+              status,
+              assignee,
+              timestamp: Date.now() - (items.length * 3600000),
+              vipStatus: false,
+              isIncomplete: false,
+              isDuplicate: false,
+              sentiment: 'Neutral',
+              aiIntent: 'Imported CSV Request',
+              aiSuggestedReply: '',
+              history: [
+                {
+                  id: 'h-' + Date.now().toString(36) + '-' + items.length,
+                  timestamp: Date.now(),
+                  type: 'created',
+                  field: 'created',
+                  from: null,
+                  to: source,
+                  author: 'CSV Dynamic Parser'
+                }
+              ]
+            });
+          }
+
+          return {
+            items,
+            headers: lines[0],
+            rowCount: items.length
+          };
+        },
+
+        parseJSON(text, filename = 'data.json') {
+          let parsed;
+          try {
+            parsed = JSON.parse(text);
+          } catch(e) {
+            throw new Error('Invalid JSON format: ' + e.message);
+          }
+
+          let rawList = null;
+          let isContextDoc = false;
+
+          if (Array.isArray(parsed)) {
+            rawList = parsed;
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            if (Array.isArray(parsed.tickets)) rawList = parsed.tickets;
+            else if (Array.isArray(parsed.items)) rawList = parsed.items;
+            else if (Array.isArray(parsed.requests)) rawList = parsed.requests;
+            else if (Array.isArray(parsed.data)) rawList = parsed.data;
+            else if (Array.isArray(parsed.inquiries)) rawList = parsed.inquiries;
+            else {
+              isContextDoc = true;
+            }
+          }
+
+          if (isContextDoc || !rawList || rawList.length === 0) {
+            return {
+              type: 'context',
+              data: parsed,
+              items: [],
+              summary: typeof parsed === 'object' ? Object.keys(parsed).slice(0, 5).join(', ') + ' fields' : 'Structured JSON Context'
+            };
+          }
+
+          const items = rawList.map((obj, idx) => {
+            const id = obj.id || obj.ticket_id || ('JSON-' + (1000 + idx + 1));
+            const subject = obj.subject || obj.title || obj.summary || obj.headline || 'Imported JSON Item';
+            const message = obj.message || obj.description || obj.content || obj.body || obj.details || subject;
+            const name = obj.name || obj.sender || obj.customer || obj.user || '';
+            const email = obj.email || obj.sender_email || obj.mail || '';
+            const source = obj.source || obj.channel || `JSON (${filename})`;
+            const category = obj.category || obj.type || 'General Inquiry';
+            let priority = obj.priority || 'Normal';
+            if (!['Urgent', 'High', 'Normal', 'Low'].includes(priority)) priority = 'Normal';
+            let status = obj.status || 'Pending';
+            if (!['Pending', 'In Progress', 'Resolved', 'Incomplete/Duplicate'].includes(status)) status = 'Pending';
+            const assignee = obj.assignee || obj.agent || 'Unassigned';
+
+            return {
+              id: String(id).startsWith('TWM-') || String(id).startsWith('JSON-') ? String(id) : 'JSON-' + id,
+              source,
+              name,
+              email,
+              subject,
+              message,
+              category,
+              priority,
+              status,
+              assignee,
+              timestamp: obj.timestamp ? Number(obj.timestamp) : Date.now() - (idx * 1800000),
+              vipStatus: !!obj.vipStatus,
+              isIncomplete: false,
+              isDuplicate: false,
+              sentiment: obj.sentiment || 'Neutral',
+              aiIntent: obj.intent || obj.aiIntent || 'Imported JSON Item',
+              aiSuggestedReply: obj.aiSuggestedReply || obj.reply || '',
+              history: [
+                {
+                  id: 'h-' + Date.now().toString(36) + '-' + idx,
+                  timestamp: Date.now(),
+                  type: 'created',
+                  field: 'created',
+                  from: null,
+                  to: source,
+                  author: 'JSON Dynamic Parser'
+                }
+              ]
+            };
+          });
+
+          return {
+            type: 'tickets',
+            data: parsed,
+            items,
+            summary: `${items.length} records parsed from JSON`
+          };
+        },
+
+        parseMarkdown(text, filename = 'document.md') {
+          const lines = text.split('\n');
+          const sections = [];
+          const actionItems = [];
+          let currentSection = { title: 'Overview', lines: [] };
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('#')) {
+              if (currentSection.lines.length > 0) sections.push({ ...currentSection });
+              currentSection = { title: trimmed.replace(/^#+\s*/, ''), lines: [] };
+            } else if (trimmed.startsWith('- [ ]') || trimmed.startsWith('* [ ]') || trimmed.match(/^(?:issue|ticket|bug|task|request)\s*#?\d*[:\-]/i)) {
+              currentSection.lines.push(trimmed);
+              const cleanMsg = trimmed.replace(/^[\-\*]\s*\[\s*\]\s*/, '');
+              actionItems.push(cleanMsg);
+            } else if (trimmed) {
+              currentSection.lines.push(trimmed);
+            }
+          }
+          if (currentSection.lines.length > 0) sections.push(currentSection);
+
+          const items = actionItems.map((msg, idx) => ({
+            id: 'MD-' + (1000 + idx + 1),
+            source: `Markdown (${filename})`,
+            name: 'Document Action Item',
+            email: 'policy-bot@twomi.live',
+            subject: msg.length > 55 ? msg.slice(0, 55) + '...' : msg,
+            message: msg,
+            category: 'General Inquiry',
+            priority: msg.toLowerCase().includes('urgent') || msg.toLowerCase().includes('critical') ? 'Urgent' : 'Normal',
+            status: 'Pending',
+            assignee: 'Unassigned',
+            timestamp: Date.now() - (idx * 3600000),
+            vipStatus: false,
+            isIncomplete: false,
+            isDuplicate: false,
+            sentiment: 'Neutral',
+            aiIntent: 'Extracted from Markdown',
+            aiSuggestedReply: '',
+            history: [
+              {
+                id: 'h-' + Date.now().toString(36) + '-' + idx,
+                timestamp: Date.now(),
+                type: 'created',
+                field: 'created',
+                from: null,
+                to: `Markdown (${filename})`,
+                author: 'Markdown Ticket Extractor'
+              }
+            ]
+          }));
+
+          const headings = sections.map(s => s.title).filter(t => t !== 'Overview').slice(0, 4).join(', ');
+          const summary = headings ? `SOP Sections: ${headings}` : `${sections.length} sections, ${lines.length} lines of operational rules`;
+
+          return {
+            sections,
+            actionItems,
+            items,
+            summary
+          };
+        },
+
+        getDynamicContextPrompt() {
+          const active = (this.uploadedFiles || []).filter(f => f.isActive);
+          if (active.length === 0) return '';
+
+          let prompt = '';
+          for (const f of active) {
+            prompt += `\n[DOCUMENT / CONTEXT: "${f.name}" (${f.type.toUpperCase()})]\n`;
+            if (f.type === 'md') {
+              prompt += f.content.slice(0, 3200) + (f.content.length > 3200 ? '\n... (truncated for context token limits)' : '');
+            } else if (f.type === 'json') {
+              if (f.parsedData && f.parsedData.type === 'context') {
+                prompt += JSON.stringify(f.parsedData.data, null, 2).slice(0, 3000);
+              } else {
+                prompt += `Loaded dataset containing ${f.recordCount || 0} tickets/records. Sample: ` + f.summary;
+              }
+            } else if (f.type === 'csv') {
+              prompt += `Tabular customer request dataset with ${f.recordCount || 0} rows. Sample summary: ` + f.summary;
+            }
+            prompt += '\n';
+          }
+          return prompt.trim();
+        },
+
+        async handleFileUpload(fileList, mode = null, autoTriage = null) {
+          if (!fileList || fileList.length === 0) return;
+          const importMode = mode || this.fileUploadMode || 'replace';
+          const shouldTriage = autoTriage !== null ? autoTriage : this.fileAutoTriage;
+
+          this.isUploading = true;
+          let totalImportedTickets = 0;
+
+          for (let i = 0; i < fileList.length; i++) {
+            const file = fileList[i];
+            const name = file.name;
+            const ext = name.split('.').pop().toLowerCase();
+            const text = await file.text();
+
+            try {
+              const res = this.processFile(name, ext, text, importMode);
+              if (res && res.ticketCount) totalImportedTickets += res.ticketCount;
+            } catch(err) {
+              this.showOpError('ERR_FILE_PARSE', `Failed to parse ${name}`, err.message || 'File syntax error', 'FILE_INGESTION');
+            }
+          }
+
+          this.isUploading = false;
+          this.recalculateEdgeCases();
+          this.saveToStorage();
+
+          if (shouldTriage && totalImportedTickets > 0) {
+            this.showOpInfo('OP_AUTO_TRIAGE', 'Auto-Triage Triggered', `Running triage on ${totalImportedTickets} imported tickets...`, 'BATCH_ORCHESTRATOR');
+            this.runAIBatchCategorize();
+          }
+        },
+
+        handleDrop(e) {
+          this.activeDragOver = false;
+          const dt = e.dataTransfer;
+          if (dt && dt.files && dt.files.length > 0) {
+            this.handleFileUpload(dt.files);
+          }
+        },
+
+        processFile(name, ext, text, importMode) {
+          let type = 'csv';
+          if (ext === 'json') type = 'json';
+          else if (ext === 'md' || ext === 'markdown') type = 'md';
+          else if (ext === 'txt') type = text.trim().startsWith('{') || text.trim().startsWith('[') ? 'json' : (text.includes(',') ? 'csv' : 'md');
+
+          const fileId = 'file-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+          let parsedData = null;
+          let summary = '';
+          let recordCount = 0;
+          let newTickets = [];
+
+          if (type === 'csv') {
+            const parsed = this.parseCSV(text, name);
+            parsedData = parsed;
+            recordCount = parsed.items.length;
+            summary = `Parsed ${recordCount} tabular requests with columns: ${(parsed.headers || []).slice(0, 5).join(', ')}`;
+            newTickets = parsed.items;
+          } else if (type === 'json') {
+            const parsed = this.parseJSON(text, name);
+            parsedData = parsed;
+            if (parsed.type === 'tickets') {
+              recordCount = parsed.items.length;
+              summary = parsed.summary;
+              newTickets = parsed.items;
+            } else {
+              summary = `Structured knowledge JSON context with ${Object.keys(parsed.data || {}).length} root keys`;
+            }
+          } else {
+            const parsed = this.parseMarkdown(text, name);
+            parsedData = parsed;
+            recordCount = parsed.actionItems ? parsed.actionItems.length : 0;
+            summary = parsed.summary;
+            newTickets = parsed.items;
+          }
+
+          const fileEntry = {
+            id: fileId,
+            name,
+            type,
+            size: text.length,
+            recordCount,
+            summary,
+            content: text,
+            parsedData,
+            timestamp: Date.now(),
+            isActive: true,
+            isQueueLoaded: newTickets.length > 0
+          };
+
+          this.uploadedFiles = this.uploadedFiles.filter(f => f.name !== name);
+          this.uploadedFiles.unshift(fileEntry);
+
+          if (newTickets.length > 0) {
+            if (importMode === 'replace') {
+              this.queue = [...newTickets];
+              this.showOpSuccess(
+                'OP_FILE_REPLACE_QUEUE',
+                this.t('opQueueReplacedTitle'),
+                `Replaced active queue with ${newTickets.length} tickets from ${name}.`,
+                `FILE: ${name}`
+              );
+            } else {
+              this.queue = [...newTickets, ...this.queue];
+              this.showOpSuccess(
+                'OP_FILE_APPEND_QUEUE',
+                this.t('opQueueAppendedTitle'),
+                `Appended ${newTickets.length} tickets from ${name} to existing queue.`,
+                `FILE: ${name}`
+              );
+            }
+          } else {
+            this.showOpSuccess(
+              'OP_CONTEXT_LOADED',
+              this.t('opContextLoadedTitle'),
+              `Loaded knowledge & rule context from ${name}. Gemini 3.5+ will ground responses in this file!`,
+              `KNOWLEDGE: ${name}`
+            );
+          }
+
+          return { ticketCount: newTickets.length };
+        },
+
+        loadStarterFile(type) {
+          if (type === 'csv') {
+            const csvData = `id,source,name,email,subject,message,priority,category,status,assignee
+CSV-501,Customer Portal,Aiko Tanaka,aiko.t@neo-vr.jp,Avatar mouth tracking freezes on iOS 18,During our live stream our custom VRM 1.0 mouth blendshapes stopped moving after 5 minutes on Safari mobile.,High,Avatar Tech & Rigging,Pending,Marcus Vance
+CSV-502,Zendesk Webhook,Jordan Taylor,jordan@streamforge.com,Billing query for Creator Studio 70/30 split,Our agency paid gift tier has not reflected in the bi-weekly payout batch on the 1st of the month.,Urgent,Creator Studio & Payouts,In Progress,Kenji Sato
+CSV-503,Intercom Chat,,invalid-email-format,cant enter live room,screen stays stuck on connecting,Normal,General Inquiry,Incomplete/Duplicate,Unassigned
+CSV-504,Support Email,David Vance,david.vance99@gmail.com,Audio delay on iOS 18 Safari,When I join a live stream via mobile browser the sound is desynced by 2 seconds compared to the avatar animation.,Low,Audio / Latency Sync,Pending,Elena Rostova
+CSV-505,Support Email,David Vance,david.vance99@gmail.com,Audio delay on iOS 18 Safari,When I join a live stream via mobile browser the sound is desynced by 2 seconds compared to the avatar animation.,Low,Audio / Latency Sync,Incomplete/Duplicate,Elena Rostova
+CSV-506,Discord Bot,Kenji Murata,kenji.m@hololive-fans.org,Request VIP badge for Jump In tournament winners,We are organizing a 50-creator Jump In community event next Friday and need VIP guest access enabled.,Normal,Account & VIP Access,Pending,Sarah Chen (Ops)`;
+            this.processFile('customer_inquiries.csv', 'csv', csvData, this.fileUploadMode);
+          } else if (type === 'json') {
+            const jsonData = JSON.stringify([
+              {
+                "id": "JSON-301",
+                "source": "Stripe Webhook",
+                "name": "Liam O'Connor",
+                "email": "liam.oc@celtic-streams.ie",
+                "subject": "Payout failed due to mismatched IBAN swift code",
+                "message": "Twomi attempted to send our monthly creator split ($4,250) but our bank returned code 403-SWIFT-INVALID. Need to update banking profile.",
+                "category": "Creator Studio & Payouts",
+                "priority": "Urgent",
+                "status": "In Progress",
+                "assignee": "Kenji Sato",
+                "vipStatus": true
+              },
+              {
+                "id": "JSON-302",
+                "source": "VRM Validator Bot",
+                "name": "Rei Hoshino",
+                "email": "rei@starlight.agency",
+                "subject": "Twomi Unity SDK bone mismatch error 104",
+                "message": "Exporting VRM model with humanoid spring physics fails on Twomi Cloud Compiler with error: Chest bone exceeds 0.05m radius limit.",
+                "category": "Avatar Tech & Rigging",
+                "priority": "High",
+                "status": "Pending",
+                "assignee": "Marcus Vance"
+              },
+              {
+                "id": "JSON-303",
+                "source": "Help Center Form",
+                "name": "Sophie Dubois",
+                "email": "sophie.d@metarealm.fr",
+                "subject": "Audio stutter when streaming in 4K 60fps",
+                "message": "When switching Jump In stream from 1080p to 4K resolution, WebRTC audio buffers and drops every 3 seconds.",
+                "category": "Audio / Latency Sync",
+                "priority": "Normal",
+                "status": "Pending",
+                "assignee": "Elena Rostova"
+              }
+            ], null, 2);
+            this.processFile('service_requests.json', 'json', jsonData, this.fileUploadMode);
+          } else if (type === 'md') {
+            const mdData = `# Twomi Live Operations & Support Playbook (SOP-2026)
+
+## 1. Payouts & Monetization Policy
+- **SLA**: All payout inquiries must be handled within **4 hours**.
+- **Payout Schedule**: Payments process twice monthly on the **1st and 15th** via Stripe Connect or SWIFT wire transfer.
+- **Minimum Payout**: $50 USD. Split is standard 70% Creator / 30% Platform.
+- **Assignee Rule**: Assign all payout and gifting tickets to **Kenji Sato**.
+
+## 2. 3D Avatar & Rigging Standards
+- **Model Formats**: Only **VRM 0.x and 1.0** compliant models are supported.
+- **Bone Limits**: Secondary bone spring collision radius must **not exceed 0.05m**.
+- **Poly Count**: Maximum 70,000 triangles for mobile Jump In compatibility.
+- **Assignee Rule**: Assign avatar rigging bugs to **Marcus Vance**.
+
+## 3. Audio & WebRTC Latency Policy
+- **Acceptable Desync**: < 150ms buffer delay.
+- **iOS 18 Fallback**: Safari iOS 18 requires disabling low-latency audio sync toggle in Stream Settings.
+- **Assignee Rule**: Assign audio/network latency bugs to **Elena Rostova**.
+
+## 4. Incomplete & Duplicate Collisions
+- Any submission lacking valid customer email or under 15 characters message must be quarantined as **Incomplete/Duplicate**.
+- Duplicated requests must be linked to original ticket ID and suppressed from redundant processing.
+
+## 5. Extracted Action Items
+- [ ] Investigate VRM 1.0 spring bone collision on iOS 18 Safari
+- [ ] Re-verify SWIFT banking routing for international European creator accounts
+- [ ] Benchmark WebRTC 4K 60fps audio jitter on US-West stream cluster`;
+            this.processFile('support_playbook.md', 'md', mdData, this.fileUploadMode);
+          }
+          this.recalculateEdgeCases();
+          this.saveToStorage();
+        },
+
+        applyFileToQueue(fileId, mode = 'replace') {
+          const file = (this.uploadedFiles || []).find(f => f.id === fileId);
+          if (!file) return;
+
+          let tickets = [];
+          if (file.type === 'csv' && file.parsedData && file.parsedData.items) {
+            tickets = file.parsedData.items;
+          } else if (file.type === 'json' && file.parsedData && file.parsedData.items) {
+            tickets = file.parsedData.items;
+          }
+
+          if (tickets.length === 0) {
+            this.showOpWarning('WARN_NO_TICKETS', 'No Tickets to Load', 'This file does not contain tabular request rows.', 'DATA_HUB');
+            return;
+          }
+
+          if (mode === 'replace') {
+            this.queue = [...tickets];
+          } else {
+            this.queue = [...tickets, ...this.queue];
+          }
+          file.isQueueLoaded = true;
+          this.recalculateEdgeCases();
+          this.saveToStorage();
+          this.showOpSuccess(
+            'OP_QUEUE_UPDATED',
+            'Queue Loaded from File',
+            `Loaded ${tickets.length} tickets from ${file.name} (${mode === 'replace' ? 'Replaced' : 'Appended'}).`,
+            `FILE: ${file.name}`
+          );
+          this.activeTab = 'queue';
+        },
+
+        extractTicketsFromMdFile(fileId) {
+          const file = (this.uploadedFiles || []).find(f => f.id === fileId);
+          if (!file || file.type !== 'md') return;
+
+          const parsed = this.parseMarkdown(file.content, file.name);
+          if (!parsed.items || parsed.items.length === 0) {
+            this.showOpInfo('INFO_NO_MD_TASKS', 'No Checklist Items Found', 'Add bullet points like "- [ ] Fix audio sync" or "Bug: ..." in markdown to extract tickets.', 'MD_PARSER');
+            return;
+          }
+
+          this.queue = [...parsed.items, ...this.queue];
+          file.isQueueLoaded = true;
+          this.recalculateEdgeCases();
+          this.saveToStorage();
+          this.showOpSuccess(
+            'OP_MD_TICKETS_EXTRACTED',
+            'Tickets Extracted from Markdown',
+            `Created ${parsed.items.length} live queue tickets from checklist items in ${file.name}.`,
+            `FILE: ${file.name}`
+          );
+          this.activeTab = 'queue';
+        },
+
+        toggleFileActive(fileId) {
+          const file = (this.uploadedFiles || []).find(f => f.id === fileId);
+          if (file) {
+            file.isActive = !file.isActive;
+            this.saveToStorage();
+            this.showOpInfo('OP_FILE_TOGGLED', file.isActive ? 'Context Enabled' : 'Context Disabled', `${file.name} is now ${file.isActive ? 'active' : 'inactive'} in AI dynamic triage.`, 'CONTEXT_STORE');
+          }
+        },
+
+        removeUploadedFile(fileId) {
+          const file = (this.uploadedFiles || []).find(f => f.id === fileId);
+          const name = file ? file.name : 'file';
+          this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== fileId);
+          this.saveToStorage();
+          this.showOpInfo('OP_FILE_REMOVED', 'File Removed', `Unloaded ${name} from context store.`, 'CONTEXT_STORE');
+        },
+
+        clearAllUploadedFiles() {
+          this.uploadedFiles = [];
+          this.saveToStorage();
+          this.showOpInfo('OP_FILES_CLEARED', 'Context Cleared', 'Removed all uploaded context files.', 'CONTEXT_STORE');
+        },
+
+        openFilePreview(file) {
+          this.previewingFile = file;
+          this.showFilePreviewModal = true;
+        },
+
+        ingestRawPastedText() {
+          const text = (this.rawPasteText || '').trim();
+          if (!text) return;
+
+          const fmt = this.rawPasteFormat || 'csv';
+          const name = `pasted_${fmt}_${new Date().toISOString().slice(11, 19).replace(/:/g, '')}.${fmt}`;
+          this.processFile(name, fmt, text, this.fileUploadMode);
+          this.rawPasteText = '';
+          this.recalculateEdgeCases();
+          this.saveToStorage();
+        },
+
         initChatbot(forceReset = false) {
           if (!this.chatMessages || this.chatMessages.length === 0 || forceReset) {
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -3216,6 +4426,11 @@ How can I help you explore the app today? Click any topic above or ask me a ques
             this.filterStatus = 'ALL';
             this.filterCategory = 'ALL';
             this.showOpInfo('OP_NAV', 'Live Queue Active', 'Displaying full operations queue.');
+          } else if (action === 'goto_context') {
+            this.activeTab = 'context';
+            this.showOpInfo('OP_NAV', 'Files & Context Hub Active', 'Upload and manage your CSV, JSON, and MD files.');
+          } else if (action === 'open_upload') {
+            this.showUploadModal = true;
           } else if (action === 'goto_contact') {
             this.activeTab = 'contact';
             this.showOpInfo('OP_NAV', 'Contact Form Active', 'Fill in customer details or use test payload presets.');
@@ -3286,15 +4501,19 @@ How can I help you explore the app today? Click any topic above or ask me a ques
           if (this.apiKey) {
             try {
               const langName = this.currentLang === 'vi' ? 'Vietnamese' : (this.currentLang === 'ja' ? 'Japanese' : 'English');
-              const systemPrompt = `You are Twomi AI Guide, the intelligent operations assistant for the Twomi Operations & Request Queue application.
+              const dynamicContext = this.getDynamicContextPrompt();
+              let systemPrompt = `You are Twomi AI Guide, the intelligent operations assistant for the Twomi Operations & Request Queue application.
 The application fulfills this exact specification:
 "Build a simple website for managing requests received through a contact form and email. Deploy it using a free hosting option such as Netlify, and submit the live URL so we can try it directly in a browser. A clearly labelled simulated email input is acceptable.
 Include a working contact form and a request-management screen showing the source, sender, message, category, and status. We should be able to submit a request, see it appear in the queue, categorize or assign it, and update its status on the live site.
 Preload 4–5 synthetic examples across both sources, including one incomplete or duplicate request, and show how you handle it. A browser-local demo is acceptable; explain how data is stored or reset.
 Check the link in a fresh browser session and include any demo access instructions."
 
-Current app stats: Total items: ${this.queue.length}, Flagged: ${this.flaggedCount}, Resolved: ${this.resolvedCount}.
-Answer the user in ${langName}. Be concise, friendly, structured with bullet points, and mention relevant UI controls.`;
+Current app stats: Total items: ${this.queue.length}, Flagged: ${this.flaggedCount}, Resolved: ${this.resolvedCount}.`;
+              if (dynamicContext) {
+                systemPrompt += `\n\n--- ACTIVE USER CONTEXT & POLICIES (FROM UPLOADED CSV/JSON/MD FILES) ---\n${dynamicContext}\n------------------------------------------------------------------------\nYou have direct access to the user's uploaded files and policies. Answer the user using the uploaded context, cite policies, and explain imported items!`;
+              }
+              systemPrompt += `\nAnswer the user in ${langName}. Be concise, friendly, structured with bullet points, and mention relevant UI controls.`;
 
               const modelToUse = this.getActiveModelIdentifier();
               const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${this.apiKey}`, {
@@ -3317,6 +4536,7 @@ Answer the user in ${langName}. Be concise, friendly, structured with bullet poi
                     text: replyText,
                     actions: [
                       { label: '📊 Xem Hàng Đợi Queue', action: 'goto_queue' },
+                      { label: '📁 Nạp & Quản lý File', action: 'goto_context' },
                       { label: '📝 Đi tới Contact Form', action: 'goto_contact' },
                       { label: '🔄 Reset Demo', action: 'reset_demo' }
                     ],
@@ -3344,8 +4564,50 @@ Answer the user in ${langName}. Be concise, friendly, structured with bullet poi
           const isVi = this.currentLang === 'vi' || /hướng dẫn|yêu cầu|đề bài|nộp|gửi|trùng|thiếu|lưu trữ|chấm điểm|hàng đợi|trạng thái|phân loại/.test(q);
           const isJa = this.currentLang === 'ja' || /要件|使い方|フォーム|メール|キュー|重複|不備|初期化|レビュアー|手順/.test(q);
 
+          // DYNAMIC FILES (CSV, JSON, MD) & CONTEXT INGESTION
+          if (q.includes('file') || q.includes('upload') || q.includes('csv') || q.includes('json') || q.includes('markdown') || q.includes('.md') || q.includes('tệp') || q.includes('ngữ cảnh') || q.includes('ファイル')) {
+            if (isVi) {
+              reply = `📁 **Hệ thống Nạp File Động (CSV, JSON, MD) & Ngữ cảnh Tự động**:
+              
+• **Nạp File CSV**: Chuyển đổi dữ liệu bảng thành các đơn trong Live Queue. Tự động ánh xạ cột (Tiêu đề, Người gửi, Nội dung, Mức ưu tiên, Danh mục...).
+• **Nạp File JSON**: Hỗ trợ danh sách đơn (\`tickets\`, \`data\`, \`items\`) hoặc tài liệu ngữ cảnh / cấu hình doanh nghiệp.
+• **Nạp File Markdown (.MD)**: Tiếp nhận tài liệu quy trình (SOP), chính sách hoàn tiền, SLA và hướng dẫn vận hành.
+• **AI Gemini 3.5+ Tự động thích ứng**: Khi bạn nạp file, toàn bộ tri thức trong file sẽ được gửi trực tiếp làm Grounding Context cho Gemini 3.5+ để tự động phân loại, trích xuất intent và soạn câu trả lời chuẩn xác.
+• **Trích xuất đơn từ Markdown**: Nhận diện các đầu việc \`- [ ]\` trong tài liệu và tạo thành ticket trực tiếp trên hàng đợi!`;
+              actions = [
+                { label: '📁 Mở Hub Quản lý File', action: 'goto_context' },
+                { label: '⬆️ Nạp File Ngay', action: 'open_upload' },
+                { label: '📊 Xem Hàng Đợi Live', action: 'goto_queue' }
+              ];
+            } else if (isJa) {
+              reply = `📁 **動的ファイル連携（CSV, JSON, MD）＆コンテキスト統合**:
+              
+• **CSV取り込み**: 問い合わせやチケット一覧を解析し、ライブキューに即時反映。重複や不備も自動判定。
+• **JSON取り込み**: チケット配列やナレッジベースオブジェクトを自動パース。
+• **Markdown (.MD) 取り込み**: 運用マニュアル、SLA規定、返金ポリシーをAIナレッジとして登録。
+• **Gemini 3.5+ 自動連携**: アップロードされたファイル内の規定に基づき、Geminiが自動分類・ドラフト返信生成を行います。`;
+              actions = [
+                { label: '📁 ファイル管理ハブ', action: 'goto_context' },
+                { label: '⬆️ アップロード', action: 'open_upload' },
+                { label: '📊 ライブキュー', action: 'goto_queue' }
+              ];
+            } else {
+              reply = `📁 **Dynamic File Ingestion (CSV, JSON, MD) & Knowledge Grounding**:
+              
+• **CSV Ingestion**: Dynamically parses tabular customer requests into the Live Queue with automatic column mapping and duplicate/anomaly detection.
+• **JSON Ingestion**: Ingests support records arrays or structured knowledge configurations.
+• **Markdown (.MD) Ingestion**: Loads standard operating procedures (SOP), SLA policies, and support playbooks into active memory.
+• **Dynamic Gemini 3.5+ Grounding**: Uploaded context is fed directly to Gemini 3.5+ for domain-specific categorization, intent detection, and tailored responses.
+• **Extract Tickets from Markdown**: Converts checklist action items (\`- [ ]\`) directly into queue tickets!`;
+              actions = [
+                { label: '📁 Open Files Hub', action: 'goto_context' },
+                { label: '⬆️ Upload File Now', action: 'open_upload' },
+                { label: '📊 View Live Queue', action: 'goto_queue' }
+              ];
+            }
+          }
           // 1. PROJECT REQUIREMENTS / BRIEF
-          if (q.includes('brief') || q.includes('requirement') || q.includes('đề bài') || q.includes('yêu cầu') || q.includes('要件') || q.includes('overview') || q.includes('tổng quan')) {
+          else if (q.includes('brief') || q.includes('requirement') || q.includes('đề bài') || q.includes('yêu cầu') || q.includes('要件') || q.includes('overview') || q.includes('tổng quan')) {
             if (isVi) {
               reply = `📋 **Tổng quan Đáp ứng Đề bài của Twomi Operations App**:
 

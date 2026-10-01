@@ -1,6 +1,6 @@
 {
   "name": "Twomi Request Queue & Operations",
-  "description": "Simple request management dashboard for forms and emails with live queue, duplicate detection, and Gemini 3.5+ AI auto-triage.",
+  "description": "Simple dynamic request management dashboard for forms, emails, and CSV/JSON/MD file uploads with live queue, duplicate detection, and Gemini 3.5+ AI auto-triage.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
